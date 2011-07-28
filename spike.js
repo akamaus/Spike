@@ -4,13 +4,13 @@ neuron_radius = 20;
 a = -0.7;
 b = 0.8;
 tau = 1/0.08;
-
+// initial conditions
 v0 = -0.9;
 w0 = 0.24;
 
 dt = 0.2;
 
-manual_stimilus = 2;
+manual_stimilus = 1;
 transmit_coef = 1;
 
 
@@ -69,12 +69,12 @@ function Neuron(x, y) {
     };
     this.soma.drag(on_drag_move, on_drag_start, on_drag_stop);
 
+    this.soma.dblclick(function() {
+        this.neuron.v += manual_stimilus;
+    });
     $(this.soma.node).bind("mousedown",
         function(e) {
             switch(e.which) {
-            case 1:
-                this.neuron.v += manual_stimilus;
-                break;
             case 2:
                 var n1 = Neuron.selected,
                 n2 = this.neuron;
@@ -165,8 +165,11 @@ function Spike() {
     };
 
     function on_tick() {
-        $(neurons).each(function(k,n) {n.i_prev = n.i; n.i = 0; });
-        $(neurons).each(function(k,n) {n.tick(); n.redraw() });
+        for (i=1;i<=2; i++) {
+            $(neurons).each(function(k,n) {n.i_prev = n.i; n.i = 0; });
+            $(neurons).each(function(k,n) {n.tick(); });
+        }
+        $(neurons).each(function(k,n) {n.redraw(); });
     }
 
 
