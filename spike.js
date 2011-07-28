@@ -13,7 +13,15 @@ dt = 0.2;
 manual_stimilus = 1;
 transmit_coef = 0.5;
 
+// Language augmentation
+Array.prototype.delete = function(obj) {
+    var i = this.indexOf(obj);
+    if (i >= 0)
+        this.splice(i,1);
+    return this;
+};
 
+// 2D point
 function Pos(x,y) {
     this.x = x;
     this.y = y;
@@ -112,6 +120,9 @@ function on_mouse_down(e) {
         }
         n2.select();
         break;
+        case 3:
+        this.neuron.remove();
+        break;
     }
 }
 
@@ -125,6 +136,7 @@ Neuron.prototype.select = function() {
     }
     Neuron.selected = this;
     Neuron.selected.soma.attr({"stroke-dasharray": "--"});
+    $('#status-bar').html(this.outgoing_links.length);
 };
 
 Neuron.prototype.toString = function() {return "N " + this.num; };
@@ -140,6 +152,14 @@ Neuron.linked = function(n1,n2) {
     return false;
 };
 
+Neuron.prototype.remove = function() {
+    alert('remove');
+    $(this.incoming_links).each(function(k,l) { l.remove(); });
+    $(this.outgoing_links).each(function(k,l) { l.remove(); });
+    this.neurons.delete(this);
+    this.soma.remove();
+};
+
 // Link related
 function Link(n1, n2) {
     this.n1 = n1;
@@ -148,6 +168,12 @@ function Link(n1, n2) {
     n2.incoming_links.push(this);
     this.axon = this.paper.path("M" + n1.getPos() + "L" + n2.getPos());
 }
+
+Link.prototype.remove = function() {
+    this.n1.outgoing_links.delete(this);
+    this.n2.incoming_links.delete(this);
+    this.axon.remove();
+};
 
 Link.prototype.toString = function() { return this.n1 + " -> " + this.n2; };
 Link.prototype.redraw = function() {this.axon.attr({path: "M" + this.n1.getPos() + "L" + this.n2.getPos()}); };
