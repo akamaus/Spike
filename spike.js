@@ -11,7 +11,7 @@ w0 = 0.24;
 dt = 0.2;
 
 manual_stimilus = 1;
-transmit_coef = 1;
+transmit_coef = 0.5;
 
 
 function Pos(x,y) {
@@ -22,6 +22,7 @@ Pos.prototype.toString = function() {
     return this.x + " " + this.y;
 };
 
+// mapping from [o1,o2] into [d1,d2]
 function affine(o1,o2,d1,d2, x) {
     var p = (x-o1) / (o2-o1);
     return d1 + (d2-d1)*p;
@@ -38,6 +39,8 @@ function int_map(o1,o2,d1,d2, x) {
     return Math.round(res);
 };
 
+// Neuron related
+
 function Neuron(x, y) {
     this.num = Neuron.new_num++;
     this.soma = this.paper.circle(x,y, neuron_radius);
@@ -53,55 +56,18 @@ function Neuron(x, y) {
 
     this.neurons.push(this);
 
-    var on_drag_start = function() {
-        this.opos = this.getPos();
-        this.attr({'stroke-width': 3});
-    };
-
-    var on_drag_stop = function() {
-        this.attr({'stroke-width': 1});
-    };
-
-    var on_drag_move = function(dx, dy) {
-        this.setPos({x: this.opos.x + dx, y: this.opos.y + dy});
-        $(this.neuron.outgoing_links).each(function(k,v) {v.redraw(); });
-        $(this.neuron.incoming_links).each(function(k,v) {v.redraw(); });
-    };
     this.soma.drag(on_drag_move, on_drag_start, on_drag_stop);
 
-    this.soma.dblclick(function() {
-        this.neuron.v += manual_stimilus;
-    });
-    $(this.soma.node).bind("mousedown",
-        function(e) {
-            switch(e.which) {
-            case 2:
-                var n1 = Neuron.selected,
-                n2 = this.neuron;
-                if (n1 && n1 != n2 && !Neuron.linked(n1,n2)) {
-                    new Link(n1,n2);
-                    Neuron.selected = undefined;
+    this.soma.dblclick(function() { this.neuron.stimulate(); });
+    this.soma.click(function() {this.neuron.select(); });
 
-                } else {
-                    Neuron.selected = this.neuron;
-                }
-                break;
-            }
-
-        });
+    $(this.soma.node).bind("mousedown", on_mouse_down);
 
     this.redraw();
 }
 
-Neuron.prototype.toString = function() {return "N " + this.num; };
 Neuron.prototype.getPos = function() { return this.soma.getPos(); };
 Neuron.prototype.setPos = function(p) { this.soma.setPos(p); };
-Neuron.linked = function(n1,n2) {
-        for (i in n1.outgoing_links) {
-        if (n1.outgoing_links[i].n2 === n2) return true;
-    }
-    return false;
-};
 
 Neuron.prototype.tick = function() {
     var v = this.v,
@@ -119,10 +85,62 @@ Neuron.prototype.tick = function() {
         }
 };
 
+// Neuron UI
+
+function on_drag_start() {
+    this.opos = this.getPos();
+    this.attr({'stroke-width': 3});
+};
+
+function on_drag_stop() {
+    this.attr({'stroke-width': 1});
+};
+
+function on_drag_move(dx, dy) {
+    this.setPos({x: this.opos.x + dx, y: this.opos.y + dy});
+    $(this.neuron.outgoing_links).each(function(k,v) {v.redraw(); });
+    $(this.neuron.incoming_links).each(function(k,v) {v.redraw(); });
+};
+
+function on_mouse_down(e) {
+    switch(e.which) {
+    case 2:
+        var n1 = Neuron.selected,
+        n2 = this.neuron;
+        if (n1 && n1 != n2 && !Neuron.linked(n1,n2)) {
+            new Link(n1,n2);
+        }
+        n2.select();
+        break;
+    }
+}
+
+Neuron.prototype.stimulate = function() {
+    this.v += manual_stimilus;
+};
+
+Neuron.prototype.select = function() {
+    if (Neuron.selected) {
+        Neuron.selected.soma.attr({"stroke-dasharray": ""});
+    }
+    Neuron.selected = this;
+    Neuron.selected.soma.attr({"stroke-dasharray": "--"});
+};
+
+Neuron.prototype.toString = function() {return "N " + this.num; };
+
 Neuron.prototype.redraw = function() {
     this.soma.attr({fill: "rgb(" + int_map(-1.5,1.5, 0, 255, this.v) +"," + int_map(-1.5,1.5, 255, 0, this.v) +",0)"});
 };
 
+Neuron.linked = function(n1,n2) {
+        for (i in n1.outgoing_links) {
+        if (n1.outgoing_links[i].n2 === n2) return true;
+    }
+    return false;
+};
+
+// Link related
 function Link(n1, n2) {
     this.n1 = n1;
     this.n2 = n2;
@@ -165,7 +183,7 @@ function Spike() {
     };
 
     function on_tick() {
-        for (i=1;i<=2; i++) {
+        for (var i=1;i<=2; i++) {
             $(neurons).each(function(k,n) {n.i_prev = n.i; n.i = 0; });
             $(neurons).each(function(k,n) {n.tick(); });
         }
