@@ -13,6 +13,8 @@ dt = 0.2;
 manual_stimilus = 1;
 transmit_coef = 0.5;
 
+tick_interval = 100;
+
 // Language augmentation
 Array.prototype.delete = function(obj) {
     var i = this.indexOf(obj);
@@ -257,12 +259,26 @@ function Spike() {
         Spike.update_stats();
     }
 
+    function start_timer() {
+        if (!Spike.timer)
+            Spike.timer = setInterval(on_tick, tick_interval);
+    }
+
+    function stop_timer() {
+        if (Spike.timer) {
+            clearInterval(Spike.timer);
+            Spike.timer = undefined;
+        }
+    }
+
+    $(window).focus(start_timer);
+    $(window).blur(stop_timer);
 
     // binding handlers
     $("#main-bar").click(on_canvas_click);
     $(document).bind("contextmenu", function() {return false;});
 
-    setInterval(on_tick, 100);
+    start_timer();
 }
 
 Spike.update_stats = function() {
