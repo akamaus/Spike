@@ -11,7 +11,8 @@ w0 = 0.24;
 dt = 0.2;
 
 manual_stimilus = 1;
-transmit_coef = 0.5;
+link_weight = 0.5;
+link_weight_max = 5;
 
 tick_interval = 100;
 
@@ -36,6 +37,24 @@ Pos.dist = function(p1,p2) {
 
 Pos.prototype.toString = function() {
     return this.x + " " + this.y;
+};
+
+// Value scroller
+function ValueRange(min, max, value) {
+    this.min = min;
+    this.max = max;
+    this.value = value;
+    this.step = (max - min) / 50.0;
+}
+
+ValueRange.prototype.move = function(d) {
+    this.value += this.step * d;
+    if (this.value < this.min) this.value = this.min;
+    else if (this.value > this.max) this.value = this.max;
+};
+
+ValueRange.prototype.valueOf = function() {
+    return this.value;
 };
 
 // mapping from [o1,o2] into [d1,d2]
@@ -97,7 +116,7 @@ Neuron.prototype.tick = function() {
 
     if (this.v > 0) // transmitting impulse
         for (i=0; i< this.outgoing_links.length; i++) {
-            this.outgoing_links[i].n2.i += transmit_coef * this.v;
+            this.outgoing_links[i].n2.i += this.outgoing_links[i].weight * this.v;
         }
 };
 
@@ -175,6 +194,7 @@ function Link(n1, n2) {
     n1.outgoing_links.push(this);
     n2.incoming_links.push(this);
 
+    this.weight = new ValueRange(0, link_weight_max, link_weight);
     this.axon = this.paper.path();
     this.axon.link = this;
     this.axon.node.link = this;
@@ -184,6 +204,7 @@ function Link(n1, n2) {
 
     this.axon.click(function() {this.link.select(); });
     $(this.axon.node).bind("mousedown", Link.on_mouse_down);
+    $(this.axon.node).mousewheel(Link.on_wheel);
 
     this.redraw();
 }
@@ -193,6 +214,11 @@ Link.on_mouse_down = function(e) {
         case 3:
         this.link.remove();
     }
+};
+
+Link.on_wheel = function(e,d) {
+    this.link.weight.move(d);
+    return false;
 };
 
 Link.prototype.select = function() {
@@ -290,7 +316,8 @@ Spike.update_stats = function() {
         neuron_stats += 'V: ' + Neuron.selected.v.toFixed(2) + "<br/>";
     }
     if(Link.selected) {
-        link_stats += 'Id: ' + Link.selected;
+        link_stats += 'Id: ' + Link.selected + "<br/>";
+        link_stats += 'Weight: ' + Link.selected.weight.valueOf().toFixed(2) + "<br/>";
     }
 
     $('#neuron-stats').html(neuron_stats);
