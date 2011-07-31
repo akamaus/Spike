@@ -130,7 +130,7 @@ Neuron.on_mouse_down = function(e) {
         this.neuron.remove();
         break;
     }
-}
+};
 
 Neuron.prototype.stimulate = function() {
     this.v += manual_stimilus;
@@ -170,11 +170,34 @@ function Link(n1, n2) {
     this.n2 = n2;
     n1.outgoing_links.push(this);
     n2.incoming_links.push(this);
+
     this.axon = this.paper.path();
+    this.axon.link = this;
+    this.axon.node.link = this;
+
     this.axon.attr({'stroke-width': 5});
     this.axon.attr({path: "M0 0"});
+
+    this.axon.click(function() {this.link.select(); });
+    $(this.axon.node).bind("mousedown", Link.on_mouse_down);
+
     this.redraw();
 }
+
+Link.on_mouse_down = function(e) {
+    switch(e.which) {
+        case 3:
+        this.link.remove();
+    }
+};
+
+Link.prototype.select = function() {
+    if (Link.selected) {
+        Link.selected.axon.attr({"stroke-dasharray": ""});
+    }
+    Link.selected = this;
+    Link.selected.axon.attr({"stroke-dasharray": "-"});
+};
 
 Link.prototype.remove = function() {
     this.n1.outgoing_links.delete(this);
