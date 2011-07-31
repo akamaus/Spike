@@ -25,7 +25,13 @@ Array.prototype.delete = function(obj) {
 function Pos(x,y) {
     this.x = x;
     this.y = y;
-}
+};
+Pos.dist = function(p1,p2) {
+    var dx = p1.x - p2.x,
+        dy = p1.y - p2.y;
+    return Math.sqrt(dx*dx + dy*dy);
+};
+
 Pos.prototype.toString = function() {
     return this.x + " " + this.y;
 };
@@ -70,7 +76,7 @@ function Neuron(x, y) {
     this.soma.click(function() {this.neuron.select(); });
 
     $(this.soma.node).bind("mousedown", on_mouse_down);
-
+    
     this.redraw();
 }
 
@@ -88,7 +94,7 @@ Neuron.prototype.tick = function() {
     this.w += dw*dt;
 
     if (this.v > 0) // transmitting impulse
-        for (i in this.outgoing_links) {
+        for (i=0; i< this.outgoing_links.length; i++) {
             this.outgoing_links[i].n2.i += transmit_coef * this.v;
         }
 };
@@ -120,7 +126,7 @@ function on_mouse_down(e) {
         }
         n2.select();
         break;
-        case 3:
+    case 3:
         this.neuron.remove();
         break;
     }
@@ -136,7 +142,6 @@ Neuron.prototype.select = function() {
     }
     Neuron.selected = this;
     Neuron.selected.soma.attr({"stroke-dasharray": "--"});
-    $('#status-bar').html(this.outgoing_links.length);
 };
 
 Neuron.prototype.toString = function() {return "N " + this.num; };
@@ -153,7 +158,6 @@ Neuron.linked = function(n1,n2) {
 };
 
 Neuron.prototype.remove = function() {
-    alert('remove');
     $(this.incoming_links).each(function(k,l) { l.remove(); });
     $(this.outgoing_links).each(function(k,l) { l.remove(); });
     this.neurons.delete(this);
@@ -166,7 +170,10 @@ function Link(n1, n2) {
     this.n2 = n2;
     n1.outgoing_links.push(this);
     n2.incoming_links.push(this);
-    this.axon = this.paper.path("M" + n1.getPos() + "L" + n2.getPos());
+    this.axon = this.paper.path();
+    this.axon.attr({'stroke-width': 5});
+    this.axon.attr({path: "M0 0"});
+    this.redraw();
 }
 
 Link.prototype.remove = function() {
@@ -176,7 +183,14 @@ Link.prototype.remove = function() {
 };
 
 Link.prototype.toString = function() { return this.n1 + " -> " + this.n2; };
-Link.prototype.redraw = function() {this.axon.attr({path: "M" + this.n1.getPos() + "L" + this.n2.getPos()}); };
+Link.prototype.redraw = function() {
+    this.axon.scale(1.,1.);
+    this.axon.attr({path: "M" + this.n1.getPos() + "L" + this.n2.getPos()});
+    var dist = Pos.dist(this.n1.getPos(),this.n2.getPos()),
+        correction = (dist - 2 * neuron_radius) / dist;
+    if (correction > 0)
+        this.axon.scale(correction,correction);
+};
 
 function Spike() {
 
@@ -219,6 +233,8 @@ function Spike() {
 
     // binding handlers
     $("#main-bar").click(on_canvas_click);
+    $(document).bind("contextmenu", function() {return false;});
+
     setInterval(on_tick, 100);
 }
 
