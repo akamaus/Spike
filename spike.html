@@ -14,11 +14,19 @@
     <body>
         <table id='display' rows='1' cols='2'>
             <tr><td id='status-bar'>
-                    <h3>Selected neuron</h3>
+                    <h1 id='app-logo'>Spike</h1>
+                    <h3>Selected neuron:</h3>
                     <div id='neuron-stats'></div>
-                    <h3>Selected axon</h3>
+                    <h3>Selected axon:</h3>
                     <div id='link-stats'></div>
                     <div id='status3'></div>
+                    <a id='help-toggle' href='#'>Click for help</a>
+                    <div id='help'>
+                        <p>Left click on free space to create a neuron.</p>
+                        <p>Left click on a neuron or a link to select it. Neurons are draggable.</p>
+                        <p>Middle click on a neuron to link previously selected neuron to it.</p>
+                        <p>Scroll the mouse wheel on a link to adjust it's weight.</p>
+                        <p>Right click on a neuron or a link to remove it.</p>
                 </td>
                 <td id='main-bar'></td>
             </tr>

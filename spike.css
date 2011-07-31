@@ -3,4 +3,11 @@ td {border-style: solid; border-width:1px; }
 #display {width:100%; }
 
 #status-bar {width: 20%; }
-#main-bar {width: 80%; height: 400px; }
+#app-logo {
+    font-weight: bold;
+}
+#help {display: none; }
+#help p {font-size:small; }
+
+#main-bar {width: 75%; height: 550px; }
+

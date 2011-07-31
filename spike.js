@@ -1,3 +1,15 @@
+/* Spike
+ *
+ * An interactive spiking neural network simulator
+ * https://github.com/akamaus/Spike/wiki
+ *
+ * Copyright 2011, Dmitry Vyal
+ * Released under the GPLv2 license
+ *
+ * Date: Sun, 31 Jul 2011 22:49:45 +0400
+ */
+
+// Important constants
 neuron_radius = 20;
 
 // Coefficients of FitzHugh-Nagumo model
@@ -329,4 +341,8 @@ Spike.setup_canvas =function(paper) {
     };
 };
 
-$(document).ready(function() {window.spike = new Spike(); });
+$(document).ready(
+    function() {
+        window.spike = new Spike();
+        $('#help-toggle').click(function() { $('#help').toggle(); });
+    });
