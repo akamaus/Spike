@@ -70,13 +70,13 @@ function Neuron(x, y) {
 
     this.neurons.push(this);
 
-    this.soma.drag(on_drag_move, on_drag_start, on_drag_stop);
+    this.soma.drag(Neuron.on_drag_move, Neuron.on_drag_start, Neuron.on_drag_stop);
 
     this.soma.dblclick(function() { this.neuron.stimulate(); });
     this.soma.click(function() {this.neuron.select(); });
 
-    $(this.soma.node).bind("mousedown", on_mouse_down);
-    
+    $(this.soma.node).bind("mousedown", Neuron.on_mouse_down);
+
     this.redraw();
 }
 
@@ -101,22 +101,22 @@ Neuron.prototype.tick = function() {
 
 // Neuron UI
 
-function on_drag_start() {
+Neuron.on_drag_start = function() {
     this.opos = this.getPos();
     this.attr({'stroke-width': 3});
 };
 
-function on_drag_stop() {
+Neuron.on_drag_stop = function() {
     this.attr({'stroke-width': 1});
 };
 
-function on_drag_move(dx, dy) {
+Neuron.on_drag_move = function(dx, dy) {
     this.setPos({x: this.opos.x + dx, y: this.opos.y + dy});
     $(this.neuron.outgoing_links).each(function(k,v) {v.redraw(); });
     $(this.neuron.incoming_links).each(function(k,v) {v.redraw(); });
 };
 
-function on_mouse_down(e) {
+Neuron.on_mouse_down = function(e) {
     switch(e.which) {
     case 2:
         var n1 = Neuron.selected,
