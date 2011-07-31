@@ -142,6 +142,8 @@ Neuron.prototype.select = function() {
     }
     Neuron.selected = this;
     Neuron.selected.soma.attr({"stroke-dasharray": "--"});
+
+    Spike.update_stats();
 };
 
 Neuron.prototype.toString = function() {return "N " + this.num; };
@@ -251,6 +253,8 @@ function Spike() {
             $(neurons).each(function(k,n) {n.tick(); });
         }
         $(neurons).each(function(k,n) {n.redraw(); });
+
+        Spike.update_stats();
     }
 
 
@@ -260,5 +264,23 @@ function Spike() {
 
     setInterval(on_tick, 100);
 }
+
+Spike.update_stats = function() {
+    var neuron_stats = "";
+    var link_stats = "";
+
+    if (Neuron.selected) {
+        neuron_stats += 'Id: ' + Neuron.selected + "<br/>";
+        neuron_stats += 'V: ' + Neuron.selected.v.toFixed(2) + "<br/>";
+    }
+    if(Link.selected) {
+        link_stats += 'Id: ' + Link.selected;
+    }
+
+    $('#neuron-stats').html(neuron_stats);
+    $('#link-stats').html(link_stats);
+
+};
+
 
 $(document).ready(Spike);
