@@ -78,6 +78,7 @@ function int_map(o1,o2,d1,d2, x) {
 
 function Neuron(x, y) {
     this.num = Neuron.new_num++;
+
     this.soma = this.paper.circle(x,y, neuron_radius);
     this.soma.neuron = this;
     this.soma.node.neuron = this;
@@ -246,66 +247,50 @@ Link.prototype.redraw = function() {
 };
 
 function Spike() {
+    this.neurons = [];
+    this.links = [];
+    this.paper = Raphael('main-bar', $('#mainbar').width(), $('#mainbar').height());
 
-    var neurons = [];
-    var links = [];
-    var paper = Raphael("main-bar", "100%", "100%");
-    Neuron.prototype.paper = paper;
-    Neuron.prototype.neurons = neurons;
+    Neuron.prototype.paper = this.paper;
+    Neuron.prototype.neurons = this.neurons;
     Neuron.new_num = 1;
     Neuron.selected = undefined;
-    Link.prototype.paper = paper;
-    Link.prototype.links = links;
+    Link.prototype.paper = this.paper;
+    Link.prototype.links = this.links;
 
-    var c = paper.circle();
-    c.__proto__.getPos = function() {
-        return new Pos(this.attr("cx"), this.attr("cy"));
-    };
-    c.__proto__.setPos = function(pos) {
-        this.attr({cx: pos.x, cy: pos.y});
-    };
-    c.remove();
+    Spike.setup_canvas(this.paper);
 
-    // handlers
-    function on_canvas_click(e) {
-        var x = e.pageX - this.offsetLeft;
-        var y = e.pageY - this.offsetTop;
-
-        if(e.originalEvent.explicitOriginalTarget.tagName == "svg")
-            new Neuron(x, y);
-    };
-
-    function on_tick() {
-        for (var i=1;i<=2; i++) {
-            $(neurons).each(function(k,n) {n.i_prev = n.i; n.i = 0; });
-            $(neurons).each(function(k,n) {n.tick(); });
-        }
-        $(neurons).each(function(k,n) {n.redraw(); });
-
-        Spike.update_stats();
-    }
-
-    function start_timer() {
-        if (!Spike.timer)
-            Spike.timer = setInterval(on_tick, tick_interval);
-    }
-
-    function stop_timer() {
-        if (Spike.timer) {
-            clearInterval(Spike.timer);
-            Spike.timer = undefined;
-        }
-    }
-
-    $(window).focus(start_timer);
-    $(window).blur(stop_timer);
+    $(window).focus(Spike.start_timer);
+    $(window).blur(Spike.stop_timer);
 
     // binding handlers
-    $("#main-bar").click(on_canvas_click);
+    $("#main-bar").click(Spike.on_canvas_click);
     $(document).bind("contextmenu", function() {return false;});
 
-    start_timer();
+    Spike.start_timer();
 }
+
+Spike.on_tick = function() {
+    for (var i=1;i<=2; i++) {
+        $(spike.neurons).each(function(k,n) {n.i_prev = n.i; n.i = 0; });
+        $(spike.neurons).each(function(k,n) {n.tick(); });
+    }
+    $(spike.neurons).each(function(k,n) {n.redraw(); });
+
+    Spike.update_stats();
+};
+
+Spike.start_timer = function() {
+    if (!Spike.timer)
+        Spike.timer = setInterval(Spike.on_tick, tick_interval);
+};
+
+Spike.stop_timer = function() {
+    if (Spike.timer) {
+        clearInterval(Spike.timer);
+        Spike.timer = undefined;
+    }
+};
 
 Spike.update_stats = function() {
     var neuron_stats = "";
@@ -325,5 +310,23 @@ Spike.update_stats = function() {
 
 };
 
+// handlers
+Spike.on_canvas_click = function(e) {
+    var x = e.pageX - $("svg").offset().left;
+    var y = e.pageY - $("svg").offset().top;
 
-$(document).ready(Spike);
+    if(e.originalEvent.explicitOriginalTarget.tagName == "svg")
+        new Neuron(x, y);
+};
+
+Spike.setup_canvas =function(paper) {
+    var c = paper.circle(0,0,1);
+    c.__proto__.getPos = function() {
+        return new Pos(this.attr("cx"), this.attr("cy"));
+    };
+    c.__proto__.setPos = function(pos) {
+        this.attr({cx: pos.x, cy: pos.y});
+    };
+};
+
+$(document).ready(function() {window.spike = new Spike(); });
