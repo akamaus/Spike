@@ -263,6 +263,12 @@ function Spike() {
     this.links = [];
     this.paper = Raphael('main-bar', $('#mainbar').width(), $('#mainbar').height());
 
+    try {
+        this.setup_chart();
+    } catch (e) { // for some reason Smoothy initialization failed
+        $('#exitation-chart').remove();
+    }
+
     Neuron.prototype.paper = this.paper;
     Neuron.prototype.neurons = this.neurons;
     Neuron.new_num = 1;
@@ -271,6 +277,7 @@ function Spike() {
     Link.prototype.links = this.links;
 
     Spike.setup_canvas(this.paper);
+
 
     $(window).focus(Spike.start_timer);
     $(window).blur(Spike.stop_timer);
@@ -308,9 +315,12 @@ Spike.update_stats = function() {
     var neuron_stats = "";
     var link_stats = "";
 
-    if (Neuron.selected) {
-        neuron_stats += 'Id: ' + Neuron.selected + "<br/>";
-        neuron_stats += 'V: ' + Neuron.selected.v.toFixed(2) + "<br/>";
+    var neuron = Neuron.selected;
+    if (neuron) {
+        neuron_stats += 'Id: ' + neuron + "<br/>";
+        neuron_stats += 'V: ' + neuron.v.toFixed(2) + "<br/>";
+        if (spike.chart_data)
+            spike.chart_data.append(new Date().getTime(), neuron.v);
     }
     if(Link.selected) {
         link_stats += 'Id: ' + Link.selected + "<br/>";
@@ -319,7 +329,6 @@ Spike.update_stats = function() {
 
     $('#neuron-stats').html(neuron_stats);
     $('#link-stats').html(link_stats);
-
 };
 
 // handlers
@@ -339,6 +348,27 @@ Spike.setup_canvas =function(paper) {
     c.__proto__.setPos = function(pos) {
         this.attr({cx: pos.x, cy: pos.y});
     };
+};
+
+Spike.prototype.setup_chart = function() {
+    this.chart = new SmoothieChart({
+        grid: { strokeStyle:'rgb(0, 125, 0)',
+                lineWidth: 1, millisPerLine: 2000, verticalSections: 4 },
+        labels: { fillStyle:'rgb(60, 0, 0)' },
+        fps:5,
+        millisPerPixel:  100,
+        minValue:-2,
+        maxValue:2,
+       interpolation: "line"
+   });
+
+    // Data
+    this.chart_data = new TimeSeries();
+
+    this.chart.addTimeSeries(this.chart_data,
+        { strokeStyle:'rgb(0, 0, 255)', lineWidth:3 });
+    this.chart.streamTo($('#exitation-chart').get(0),300);
+
 };
 
 $(document).ready(

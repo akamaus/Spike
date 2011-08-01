@@ -6,6 +6,8 @@ td {border-style: solid; border-width:1px; }
 #app-logo {
     font-weight: bold;
 }
+#exitation-chart { width: 120%; height: 30%;}
+
 #help {display: none; }
 #help p {font-size:small; }
 
