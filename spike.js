@@ -376,7 +376,7 @@ Spike.on_canvas_click = function(e) {
     var x = e.pageX - $("svg").offset().left;
     var y = e.pageY - $("svg").offset().top;
 
-    if(e.originalEvent.explicitOriginalTarget.tagName == "svg")
+    if(e.target.tagName == "svg")
         new Neuron(x, y);
 };
 
